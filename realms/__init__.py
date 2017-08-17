@@ -238,6 +238,7 @@ csrf = CsrfProtect()
 
 assets.register('main.js',
                 'vendor/jquery/dist/jquery.js',
+                'vendor/leaflet/dist/leaflet.js',
                 'vendor/components-bootstrap/js/bootstrap.js',
                 'vendor/handlebars/handlebars.js',
                 'vendor/js-yaml/dist/js-yaml.js',
@@ -258,6 +259,7 @@ assets.register('main.css',
                 'vendor/components-font-awesome/css/font-awesome.css',
                 'vendor/highlightjs/styles/github.css',
                 'vendor/datatables-plugins/integration/bootstrap/3/dataTables.bootstrap.css',
+                'vendor/leaflet/dist/leaflet.css',
                 'css/style.css')
 
 

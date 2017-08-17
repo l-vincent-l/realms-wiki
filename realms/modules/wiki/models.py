@@ -78,6 +78,8 @@ class Wiki(HookMixin):
         rv = []
         index = self.repo.open_index()
         for name in index:
+            if name [-3:] != '.md':
+                continue
             rv.append(dict(name=filename_to_cname(name),
                            filename=name,
                            ctime=index[name].ctime[0],
@@ -102,10 +104,28 @@ class WikiPage(HookMixin):
         if cached:
             return cached
 
-        mode, sha = tree_lookup_path(self.wiki.repo.get_object, self.wiki.repo[self.sha].tree, self.filename)
+        mode, sha = tree_lookup_path(self.wiki.repo.get_object,
+                                     self.wiki.repo[self.sha].tree,
+                                     self.filename)
         data = self.wiki.repo[sha].data
         cache.set(cache_key, data)
         return data
+
+    @property
+    def geojson(self):
+        cache_key = self._cache_key('geojson')
+        cached = cache.get(cache_key)
+        if cached:
+            return cached
+
+        filename = self.filename[:-3] + '.geojson'
+        mode, sha = tree_lookup_path(self.wiki.repo.get_object,
+                                     self.wiki.repo[self.sha].tree,
+                                     filename)
+        data = self.wiki.repo[sha].data
+        cache.set(cache_key, data)
+        return data
+
 
     @property
     def history(self):

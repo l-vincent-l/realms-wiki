@@ -22,6 +22,17 @@
       </form>
     </div>
   {% endif %}
+  {% if page.geojson %}
+  <div id="map"></div>
+  {% block css %}
+<style>
+   #map {
+     height: 500px;
+   }
+</style>
+  {% endblock %}
+  {% endif %}
+
   <div id="page-content"></div>
 
 {% endblock %}
@@ -31,5 +42,31 @@
     $(function(){
       $("#page-content").html(MDR.convert({{ page.data|tojson|safe }}, {{ partials|d([])|tojson|safe }})).show();
     });
+    {% if page.geojson %}
+    var mymap = L.map('map').setView([51.505, -0.09], 13);
+    L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+        attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+        maxZoom: 18,
+        id: 'mapbox.streets',
+        accessToken: 'pk.eyJ1IjoibC12aW5jZW50LWwiLCJhIjoiaDJfM05UMCJ9.l9oR075SSzJY9hXEqaRvoQ'
+}).addTo(mymap);
+    var geojsonFeature = {{ page.geojson | safe }};
+    var geojson = L.geoJSON(geojsonFeature, {
+        "onEachFeature": function(feature, layer) {
+            layer.on('click', function (e) {
+               var page_url = '/' + feature.properties.page_name;
+                window.location = page_url;
+            })
+        },
+        pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng, 
+                {radius: 2,
+                 color: feature.properties.has_data ? 'green' : 'red'
+                });
+        }
+     });
+    geojson.addTo(mymap);
+    mymap.fitBounds(geojson.getBounds());
+    {% endif %}
   </script>
 {% endblock %}
