@@ -83,6 +83,22 @@ providers = {
             'email': 'email'
         },
         'token_name': 'access_token'
+    },
+    'datagouvfr': {
+        'oauth': dict(
+            authorize_url='https://www.data.gouv.fr/oauth/authorize',
+            access_token_url='https://www.data.gouv.fr/oauth/token',
+            base_url='https://www.data.gouv.fr/api/1/',
+            request_token_params={'scope': 'default'},
+        ),
+        'button': '<a href="/login/oauth/datagouvfr">Datagouv</a>',
+        'token_name': 'access_token',
+        'profile': 'me/',
+        'field_map': {
+            'id': 'user_id',
+            'username': lambda d: d['first_name'] + ' ' + d['last_name'],
+            'email': 'email'
+        },
     }
 }
 
