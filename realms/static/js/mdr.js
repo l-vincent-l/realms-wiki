@@ -60,7 +60,8 @@ var markdownit = window.markdownit({
   permalinkClass: 'header-anchor',
   permalinkSymbol: '¶',
   permalinkBefore: false
-});
+}).use(markdownitContainer, 'liste-insee')
+  .use(markdownitContainer, 'source');
 
 // Markdown Renderer
 var MDR = {
