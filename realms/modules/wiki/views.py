@@ -3,6 +3,9 @@ from __future__ import absolute_import
 import collections
 import itertools
 import sys
+import re
+import urllib
+from urlparse import urlsplit
 from datetime import datetime
 
 from flask import abort, g, render_template, request, redirect, Blueprint, flash, url_for, current_app, make_response
@@ -12,6 +15,7 @@ from flask_login import login_required, current_user
 from realms.version import __version__
 from realms.lib.util import to_canonical, remove_ext, gravatar_url
 from .models import PageNotFound
+
 
 blueprint = Blueprint('wiki', __name__, template_folder='templates',
                       static_folder='static', static_url_path='/static/wiki')
@@ -246,6 +250,40 @@ def index(path):
     return render_template('wiki/index.html', index=items, path=path)
 
 
+@blueprint.route('/_add_source/<path:name>')
+@login_required
+def add_source(name):
+    if current_app.config.get('PRIVATE_WIKI') and current_user.is_anonymous:
+        return current_app.login_manager.unauthorized()
+
+    cname = to_canonical(name)
+    if cname != name:
+        return redirect(url_for('wiki.page', name=cname))
+
+    page = g.current_wiki.get_page(cname)
+    if not page:
+        return redirect(url_for('wiki.page', name='home'))
+
+    new_source = urllib.unquote_plus(request.args.get('source')).decode('utf8')
+    if not new_source or not urlsplit(new_source).netloc == 'www.data.gouv.fr':
+        return redirect(url_for('wiki.page', name=cname))
+    lines = page.data.split('\n')
+    content = """{}
+
+::: source
+{}
+:::
+
+{}
+""".format("\n".join(lines[0:2]), new_source, "\n".join(lines[2:]))
+    sha = page.write(content,
+                     message='Add source automatically',
+                     username=current_user.username,
+                     email=current_user.email)
+
+    return redirect(url_for('wiki.page', name=cname))
+
+
 @blueprint.route("/<path:name>", methods=['POST', 'PUT', 'DELETE'])
 @login_required
 def page_write(name):
@@ -307,6 +345,7 @@ def page(name):
     data = g.current_wiki.get_page(cname)
 
     if data:
-        return render_template('wiki/page.html', name=cname, page=data, partials=_partials(data.imports))
+        return render_template('wiki/page.html', name=cname, page=data,
+                               partials=_partials(data.imports))
     else:
         return redirect(url_for('wiki.create', name=cname))
