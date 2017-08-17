@@ -31,9 +31,11 @@
    }
 </style>
   {% endblock %}
+  <div id="feeds"></div>
   {% endif %}
 
   <div id="page-content"></div>
+
 
 {% endblock %}
 
@@ -67,6 +69,26 @@
      });
     geojson.addTo(mymap);
     mymap.fitBounds(geojson.getBounds());
+    {% if name != 'home' %}
+    $.ajax("http://localhost:9966/api/manager/public/feedsource?bbox=" 
+            + mymap.getBounds().toBBoxString()
+            ).done(function(data) {
+        if (!data) {
+            $('#feeds').append('<span>Pas de donnée disponible</span>');
+        } else {
+            $('#feeds').append('<span>Source de données disponibles : </span>');
+            var ul = $("#feeds").append("<ul></ul>");
+            var sources = $('.source').find('a').get().map(function(a) { return $(a).attr('href');});
+            data.map(function(feed){
+                if (sources.indexOf(feed.url) != -1) {
+                    return;
+                }
+                properties = feed.externalProperties['DATAGOUVFR'];
+                ul.append('<li>'+ properties.title + '&nbsp;<a href="_add_source/{{ page.name }}?source=' + encodeURIComponent(feed.url) + '">Ajouter la source</a></li>');
+            });
+        }
+    });
+    {% endif %}
     {% endif %}
   </script>
 {% endblock %}
